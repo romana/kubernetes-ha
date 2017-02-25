@@ -1,0 +1,5 @@
+#!/bin/bash
+if ! [[ -f "ca.pem" ]]; then
+	cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+	rm "ca.csr"
+fi

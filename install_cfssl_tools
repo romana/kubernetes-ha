@@ -1,0 +1,8 @@
+#!/bin/bash
+for tool in cfssl cfssljson; do
+	if ! [[ -f "/usr/local/bin/$tool" ]]; then
+		wget "https://pkg.cfssl.org/R1.2/${tool}_linux-amd64"
+		sudo install -o root -g root -m 0755 "${tool}_linux-amd64" "/usr/local/bin/$tool"
+		rm "${tool}_linux-amd64"
+	fi
+done
