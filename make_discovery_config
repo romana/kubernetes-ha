@@ -24,3 +24,4 @@ replacements=(
 	-e 's|<token-map-base64>|'"$token_map_base64"'|g'
 )
 sed "${replacements[@]}" clusterinfo-secret.yaml.t > clusterinfo-secret.yaml
+echo "Discovery token: $key.$token"
