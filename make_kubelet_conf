@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [[ -f kubelet.conf ]]; then
+	echo "Already generated kubelet config"
+	exit
+fi
+
+if ! [[ "$1" ]]; then
+	echo "Expected argument for apiserver address, eg: your-apiserver.external.dns.name:6443"
+	exit 1
+fi
+
+echo '{ "CN": "kubernetes-admin" }' | cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile client - | cfssljson -bare admin
+rm "admin.csr"
+kubectl --kubeconfig=kubelet.conf config set-cluster kubernetes --embed-certs --certificate-authority='ca.pem' --server="https://$1"
+kubectl --kubeconfig=kubelet.conf config set-credentials admin --embed-certs --client-certificate='admin.pem' --client-key='admin-key.pem'
+kubectl --kubeconfig=kubelet.conf config set-context admin@kubernetes --user=admin --cluster=kubernetes
+kubectl --kubeconfig=kubelet.conf config use-context admin@kubernetes

@@ -1,0 +1,62 @@
+#!/bin/bash
+
+usage() {
+	echo "install_files: helper script to install config on a master nodes"
+	echo
+	echo "usage: install_files <from> <host-ip>"
+	echo "  from: location of files, passed to scp, eg: node-ip:/tmp/configs"
+	echo "  host-ip: IP of host to get files for"
+}
+
+if (( $# != 2 )); then
+	echo "Incorrect number of arguments"
+	usage
+	exit 1
+fi
+
+from="$1"
+host_ip="$2"
+
+files=(
+	"$from/ca.pem"
+	"$from/ca-key.pem"
+	"$from/apiserver:${host_ip}.pem"
+	"$from/apiserver:${host_ip}-key.pem"
+	"$from/sa-key.pem"
+	"$from/sa-pub.pem"
+	"$from/tokens.csv"
+	"$from/kubelet.conf"
+	"$from/etcd-bootstrap:${host_ip}.yaml"
+	"$from/etcd:${host_ip}.yaml"
+	"$from/kube-apiserver:${host_ip}.yaml"
+	"$from/kube-controller-manager.yaml"
+	"$from/kube-scheduler.yaml"
+)
+
+scp "${files[@]}" .
+
+if ! [[ -d /etc/kubernetes/pki ]]; then
+	sudo mkdir /etc/kubernetes/pki
+	sudo chmod 0700 /etc/kubernetes/pki
+fi
+
+# PKI
+sudo install -o root -g root -m 0644 "ca.pem" /etc/kubernetes/pki/ca.pem
+sudo install -o root -g root -m 0600 "ca-key.pem" /etc/kubernetes/pki/ca-key.pem
+sudo install -o root -g root -m 0644 "apiserver:${host_ip}.pem" /etc/kubernetes/pki/apiserver.pem
+sudo install -o root -g root -m 0600 "apiserver:${host_ip}-key.pem" /etc/kubernetes/pki/apiserver-key.pem
+sudo install -o root -g root -m 0600 "sa-key.pem" /etc/kubernetes/pki/sa-key.pem
+sudo install -o root -g root -m 0600 "sa-pub.pem" /etc/kubernetes/pki/sa-pub.pem
+sudo install -o root -g root -m 0600 "tokens.csv" /etc/kubernetes/pki/tokens.csv
+# Kubelet
+sudo install -o root -g root -m 0600 "kubelet.conf" /etc/kubernetes/kubelet.conf
+# Manifests
+if ! [[ -d /etc/kubernetes/disabled-manifests ]]; then
+	sudo mkdir /etc/kubernetes/disabled-manifests
+fi
+sudo install -o root -g root -m 0600 "etcd-bootstrap:${host_ip}.yaml" /etc/kubernetes/disabled-manifests/etcd-bootstrap.yaml
+sudo install -o root -g root -m 0600 "etcd:${host_ip}.yaml" /etc/kubernetes/disabled-manifests/etcd.yaml
+sudo install -o root -g root -m 0600 "kube-apiserver:${host_ip}.yaml" /etc/kubernetes/disabled-manifests/kube-apiserver.yaml
+sudo install -o root -g root -m 0600 "kube-controller-manager.yaml" /etc/kubernetes/disabled-manifests/kube-controller-manager.yaml
+sudo install -o root -g root -m 0600 "kube-scheduler.yaml" /etc/kubernetes/disabled-manifests/kube-scheduler.yaml
+

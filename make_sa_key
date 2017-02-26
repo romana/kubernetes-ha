@@ -1,0 +1,8 @@
+#!/bin/bash
+if [[ -f sa-key.pem ]]; then
+	echo "Service Account key already exists"
+	exit
+fi
+openssl genrsa -out sa-key.pem 2048
+chmod 0600 sa-key.pem
+openssl rsa -in sa-key.pem -pubout -out sa-pub.pem

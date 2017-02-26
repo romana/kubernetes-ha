@@ -43,7 +43,24 @@ if ! (( $# )); then
 	exit 1
 fi
 
+expected_files=( ca.pem ca-key.pem ca-config.json )
+for f in "${expected_files[@]}"; do
+	missing=0
+	if ! [[ -f "$f" ]]; then
+		echo "Expected $f, not found"
+		missing=1
+	fi
+	if (( missing )); then
+		echo "Generate the missing files or copy them to the expected location"
+		exit 1
+	fi
+done
+
 for ip in "$@"; do
+	if [[ -f "apiserver:$ip.pem" ]]; then
+		echo "certificate already generated for $ip"
+		continue
+	fi
 	san_hosts="kubernetes,kubernetes.default,kubernetes.default.svc"
 	if [[ "$cluster_domain" ]]; then
 		san_hosts+=",kubernetes.default.svc.$cluster_domain"

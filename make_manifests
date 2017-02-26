@@ -1,0 +1,39 @@
+#!/bin/bash
+
+usage() {
+	echo "make_manifests: helper script to manifests for clustered master nodes"
+	echo
+	echo "usage: make_manifests <host-ip> [host-ip...]"
+}
+
+if ! (( $# )); then
+	echo "No host ips provided"
+	usage
+	exit 1
+fi
+
+initial_cluster=
+etcd_servers=
+sep=
+i=0
+for ip in "$@"; do
+	(( i++ ))
+	printf -v initial_cluster "%s%setcd-%d=http://%s:2380" "$initial_cluster" "$sep" "$i" "$ip"
+	printf -v etcd_servers "%s%shttp://%s:2379" "$etcd_servers" "$sep" "$ip"
+	sep=,
+done
+
+i=0
+for ip in "$@"; do
+	(( i++ ))
+	replacements=(
+		-e 's|masters|'"$#"'|g'
+		-e 's|<node-number>|'"$i"'|g'
+		-e 's|<host-ip>|'"$ip"'|g'
+		-e 's|<initial-cluster>|'"$initial_cluster"'|g'
+		-e 's|<etcd-servers>|'"$etcd_servers"'|g'
+	)
+	sed "${replacements[@]}" etcd-bootstrap.yaml.t > "etcd-bootstrap:$ip.yaml"
+	sed "${replacements[@]}" etcd.yaml.t > "etcd:$ip.yaml"
+	sed "${replacements[@]}" kube-apiserver.yaml.t > "kube-apiserver:$ip.yaml"
+done
