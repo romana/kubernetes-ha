@@ -18,7 +18,7 @@ spec:
     - --insecure-bind-address=127.0.0.1
     - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,PersistentVolumeLabel,DefaultStorageClass,ResourceQuota
     - --service-cluster-ip-range=10.96.0.0/12
-    - --service-account-key-file=/etc/kubernetes/pki/apiserver-key.pem
+    - --service-account-key-file=/etc/kubernetes/pki/sa-pub.pem
     - --client-ca-file=/etc/kubernetes/pki/ca.pem
     - --tls-cert-file=/etc/kubernetes/pki/apiserver.pem
     - --tls-private-key-file=/etc/kubernetes/pki/apiserver-key.pem

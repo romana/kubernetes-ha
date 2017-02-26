@@ -19,7 +19,7 @@ spec:
     - --master=127.0.0.1:8080
     - --cluster-name=kubernetes
     - --root-ca-file=/etc/kubernetes/pki/ca.pem
-    - --service-account-private-key-file=/etc/kubernetes/pki/apiserver-key.pem
+    - --service-account-private-key-file=/etc/kubernetes/pki/sa-key.pem
     - --cluster-signing-cert-file=/etc/kubernetes/pki/ca.pem
     - --cluster-signing-key-file=/etc/kubernetes/pki/ca-key.pem
     - --insecure-experimental-approve-all-kubelet-csrs-for-group=system:kubelet-bootstrap
