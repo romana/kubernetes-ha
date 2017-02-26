@@ -93,12 +93,13 @@ Wait for node to rejoin the cluster
 
 # Add essential config and services
 
-## Taint master nodes
+## Taint and label master nodes
 
 For each master node, apply the taint as follows:
 
 ```bash
 kubectl taint node node-name dedicated=master:NoSchedule
+kubectl label node node-name kubeadm.alpha.kubernetes.io/role=master
 ```
 
 ## Add kube-proxy

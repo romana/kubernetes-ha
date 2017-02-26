@@ -1,0 +1,120 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: romana-services
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        app: romana-services
+    spec:
+      nodeSelector:
+        kubeadm.alpha.kubernetes.io/role: master
+      hostNetwork: true
+      containers:
+      - name: romana-services
+        image: quay.io/romana/services:v0.9.8.1-hotfix.1
+        imagePullPolicy: Always
+        args:
+        - --cidr=100.112.0.0/12
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: romana-secrets
+              key: datastore-password
+        volumeMounts:
+        - name: log-path
+          mountPath: /var/log/romana
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            host: 127.0.0.1
+            path: /
+            port: 9600
+            scheme: HTTP
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          successThreshold: 1
+          timeoutSeconds: 5
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            host: 127.0.0.1
+            path: /
+            port: 9600
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+      volumes:
+      - name: log-path
+        hostPath:
+          path: /var/log/romana
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: romana-root
+  namespace: kube-system
+spec:
+  ports:
+  - name: root
+    port: 9600
+    protocol: TCP
+    targetPort: 9600
+  selector:
+    app: romana-services
+  sessionAffinity: None
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: romana-agent
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        app: romana-agent
+    spec:
+      hostNetwork: true
+      containers:
+      - name: romana-agent
+        image: quay.io/romana/agent:v0.9.8.1
+        imagePullPolicy: Always
+        args:
+        - --cluster-ip-cidr=10.96.0.0/12
+        - --cni-image=quay.io/romana/cni:v0.9.8.1
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-usr-local-bin
+          mountPath: /host/usr/local/bin
+        - name: host-etc-romana
+          mountPath: /host/etc/romana
+        - name: host-cni-bin
+          mountPath: /host/opt/cni/bin
+        - name: host-cni-net-d
+          mountPath: /host/etc/cni/net.d
+        - name: log-path
+          mountPath: /var/log/romana
+      volumes:
+      - name: host-usr-local-bin
+        hostPath:
+          path: /usr/local/bin
+      - name: host-etc-romana
+        hostPath:
+          path: /etc/romana
+      - name: host-cni-bin
+        hostPath:
+          path: /opt/cni/bin
+      - name: host-cni-net-d
+        hostPath:
+          path: /etc/cni/net.d
+      - name: log-path
+        hostPath:
+          path: /var/log/romana
