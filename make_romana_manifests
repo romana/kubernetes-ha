@@ -1,0 +1,46 @@
+#!/bin/bash
+
+usage() {
+	echo "make_romana_manifests: helper script to manifests for clustered master nodes"
+	echo
+	echo "usage: make_romana_manifests <host-ip> [host-ip...]"
+}
+
+if ! (( $# )); then
+	echo "No host ips provided"
+	usage
+	exit 1
+fi
+
+initial_cluster=
+datastore_nodes=
+sep=
+i=0
+for ip in "$@"; do
+	(( i++ ))
+	printf -v initial_cluster "%s%setcd-%d=http://%s:2380" "$initial_cluster" "$sep" "$i" "$ip"
+	printf -v datastore_nodes "%s%s%s" "$datastore_nodes" "$sep" "$ip"
+	sep=,
+done
+
+i=0
+first=1
+for ip in "$@"; do
+	(( i++ ))
+	replacements=(
+		-e 's|<node-number>|'"$i"'|g'
+		-e 's|<host-ip>|'"$ip"'|g'
+		-e 's|<initial-cluster>|'"$initial_cluster"'|g'
+		-e 's|<datastore-nodes>|'"$datastore_nodes"'|g'
+	)
+	sed "${replacements[@]}" romana-etcd-bootstrap.yaml.t > "romana-etcd-bootstrap:$ip.yaml"
+	sed "${replacements[@]}" romana-etcd.yaml.t > "romana-etcd:$ip.yaml"
+	if (( first )); then
+		first=0
+		sed "${replacements[@]}" romana-datastore-bootstrap:first.yaml.t > "romana-datastore-bootstrap:$ip.yaml"
+	else 
+		sed "${replacements[@]}" romana-datastore-bootstrap.yaml.t > "romana-datastore-bootstrap:$ip.yaml"
+	fi
+	sed "${replacements[@]}" romana-datastore.yaml.t > "romana-datastore:$ip.yaml"
+
+done

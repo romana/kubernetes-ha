@@ -1,0 +1,40 @@
+#!/bin/bash
+
+usage() {
+	echo "install_romana_files: helper script to install config on a master nodes"
+	echo
+	echo "usage: install_romana_files <from> <host-ip>"
+	echo "  from: location of files, passed to scp, eg: node-ip:/tmp/configs"
+	echo "  host-ip: IP of host to get files for"
+}
+
+if (( $# != 2 )); then
+	echo "Incorrect number of arguments"
+	usage
+	exit 1
+fi
+
+from="$1"
+host_ip="$2"
+
+files=(
+	"$from/romana-etcd-bootstrap:${host_ip}.yaml"
+	"$from/romana-etcd:${host_ip}.yaml"
+	"$from/romana-datastore-bootstrap:${host_ip}.yaml"
+	"$from/romana-datastore:${host_ip}.yaml"
+)
+
+scp "${files[@]}" .
+
+if ! [[ -d /etc/kubernetes/pki ]]; then
+	sudo mkdir /etc/kubernetes/pki
+	sudo chmod 0700 /etc/kubernetes/pki
+fi
+
+if ! [[ -d /etc/kubernetes/disabled-manifests ]]; then
+	sudo mkdir /etc/kubernetes/disabled-manifests
+fi
+sudo install -o root -g root -m 0600 "romana-etcd-bootstrap:${host_ip}.yaml" /etc/kubernetes/disabled-manifests/romana-etcd-bootstrap.yaml
+sudo install -o root -g root -m 0600 "romana-etcd:${host_ip}.yaml" /etc/kubernetes/disabled-manifests/romana-etcd.yaml
+sudo install -o root -g root -m 0600 "romana-datastore-bootstrap:${host_ip}.yaml" /etc/kubernetes/disabled-manifests/romana-datastore-bootstrap.yaml
+sudo install -o root -g root -m 0600 "romana-datastore:${host_ip}.yaml" /etc/kubernetes/disabled-manifests/romana-datastore.yaml
