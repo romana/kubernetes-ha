@@ -1,0 +1,26 @@
+#!/bin/bash
+
+if [[ -f tokens.csv ]]; then
+	echo "Tokens already generated"
+	exit
+fi
+
+if ! [[ "$1" ]]; then
+	echo "Expected argument for apiserver address, eg: your-apiserver.external.dns.name:6443"
+	exit 1
+fi
+
+key=$(openssl rand -hex 3)
+token=$(openssl rand -hex 8)
+uuid=$(uuidgen)
+printf "%s,kubeadm-node-csr,%s,system:kubelet-bootstrap\n" "$token" "$uuid" > tokens.csv
+
+ca_pem_base64=$(base64 --wrap=0 < ca.pem)
+endpoint_list_base64=$(base64 --wrap=0 <<< "$(printf '["%s"]' "https://$1")")
+token_map_base64=$(base64 --wrap=0 <<< "$(printf '{"%s":"%s"}' "$key" "$token")")
+replacements=(
+	-e 's|<ca-pem-base64>|'"$ca_pem_base64"'|g'
+	-e 's|<endpoint-list-base64>|'"$endpoint_list_base64"'|g'
+	-e 's|<token-map-base64>|'"$token_map_base64"'|g'
+)
+sed "${replacements[@]}" clusterinfo-secret.yaml.t > clusterinfo-secret.yaml

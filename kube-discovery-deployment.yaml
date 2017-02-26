@@ -1,0 +1,58 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    component: kube-discovery
+    k8s-app: kube-discovery
+    kubernetes.io/cluster-service: "true"
+    name: kube-discovery
+    tier: node
+  name: kube-discovery
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: kube-discovery
+      k8s-app: kube-discovery
+      kubernetes.io/cluster-service: "true"
+      name: kube-discovery
+      tier: node
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"dedicated","value":"master","effect":"NoSchedule"}]'
+      creationTimestamp: null
+      labels:
+        component: kube-discovery
+        k8s-app: kube-discovery
+        kubernetes.io/cluster-service: "true"
+        name: kube-discovery
+        tier: node
+    spec:
+      hostNetwork: true
+      containers:
+      - name: kube-discovery
+        image: gcr.io/google_containers/kube-discovery-amd64:1.0
+        imagePullPolicy: IfNotPresent
+        command:
+        - /usr/local/bin/kube-discovery
+        ports:
+        - containerPort: 9898
+          hostPort: 9898
+          name: http
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /tmp/secret
+          name: clusterinfo
+          readOnly: true
+      volumes:
+      - name: clusterinfo
+        secret:
+          defaultMode: 420
+          secretName: clusterinfo

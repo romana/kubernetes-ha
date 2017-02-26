@@ -27,7 +27,7 @@ i=0
 for ip in "$@"; do
 	(( i++ ))
 	replacements=(
-		-e 's|masters|'"$#"'|g'
+		-e 's|<masters>|'"$#"'|g'
 		-e 's|<node-number>|'"$i"'|g'
 		-e 's|<host-ip>|'"$ip"'|g'
 		-e 's|<initial-cluster>|'"$initial_cluster"'|g'
