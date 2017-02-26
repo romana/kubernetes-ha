@@ -181,7 +181,7 @@ Wait for node to rejoin the cluster
 ## Add secret for romana-datastore
 
 ```bash
-kubectl apply romana-datastore-secret.yaml
+kubectl apply -f romana-datastore-secret.yaml
 ```
 
 ## Start romana-datastore

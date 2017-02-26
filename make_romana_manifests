@@ -18,7 +18,7 @@ sep=
 i=0
 for ip in "$@"; do
 	(( i++ ))
-	printf -v initial_cluster "%s%setcd-%d=http://%s:2380" "$initial_cluster" "$sep" "$i" "$ip"
+	printf -v initial_cluster "%s%setcd-%d=http://%s:12380" "$initial_cluster" "$sep" "$i" "$ip"
 	printf -v datastore_nodes "%s%s%s" "$datastore_nodes" "$sep" "$ip"
 	sep=,
 done
