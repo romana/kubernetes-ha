@@ -1,0 +1,4 @@
+*.pem
+*:*.yaml
+kubelet.conf
+tokens.csv
