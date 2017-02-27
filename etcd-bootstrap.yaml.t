@@ -17,7 +17,7 @@ spec:
     - --name=etcd-<node-number>
     - --listen-client-urls=http://127.0.0.1:2379,http://<host-ip>:2379
     - --listen-peer-urls=http://<host-ip>:2380
-    - --advertise-client-urls=http://192.168.99.12:2379
+    - --advertise-client-urls=http://<host-ip>:2379
     - --data-dir=/var/etcd/data
     - --initial-cluster=<initial-cluster>
     - --initial-advertise-peer-urls=http://<host-ip>:2380
